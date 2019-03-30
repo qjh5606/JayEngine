@@ -1,8 +1,0 @@
-﻿  JayEngineMain.cpp
-e:\jzchen\learningworkspace\jayengine\jayengine\jayenginemain.cpp(67): warning C4838: 从“int”转换到“DWORD”需要收缩转换
-e:\jzchen\learningworkspace\jayengine\jayengine\jayenginemain.cpp(364): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-e:\jzchen\learningworkspace\jayengine\jayengine\jayenginemain.cpp(365): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
-e:\jzchen\learningworkspace\jayengine\jayengine\jayenginemain.cpp(752): warning C4244: “=”: 从“float”转换到“int”，可能丢失数据
-e:\jzchen\learningworkspace\jayengine\jayengine\jayenginemain.cpp(819): warning C4244: “参数”: 从“int”转换到“float”，可能丢失数据
-  JayEngine.vcxproj -> E:\JZChen\LearningWorkSpace\JayEngine\Debug\JayEngine.exe
-  JayEngine.vcxproj -> E:\JZChen\LearningWorkSpace\JayEngine\Debug\JayEngine.pdb (Partial PDB)
