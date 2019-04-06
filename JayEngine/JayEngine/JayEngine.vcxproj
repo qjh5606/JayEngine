@@ -110,7 +110,23 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="JayCamera.cpp" />
     <ClCompile Include="JayEngineMain.cpp" />
+    <ClCompile Include="JayLight.cpp" />
+    <ClCompile Include="JayMath3D.cpp" />
+    <ClCompile Include="JayObject.cpp" />
+    <ClCompile Include="JayPipeline.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JayHeader.h" />
+    <ClInclude Include="JayCamera.h" />
+    <ClInclude Include="JayLight.h" />
+    <ClInclude Include="JayMath3D.h" />
+    <ClInclude Include="JayObject.h" />
+    <ClInclude Include="JayPipeline.h" />
+    <ClInclude Include="JayShader.h" />
+    <ClInclude Include="JayTransform.h" />
+    <ClInclude Include="tiny_obj_loader.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

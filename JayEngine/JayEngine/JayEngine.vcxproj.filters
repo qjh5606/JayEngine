@@ -13,10 +13,69 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="源文件\Camera">
+      <UniqueIdentifier>{b35abc0e-155a-45f5-bd35-38a494da8840}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Light">
+      <UniqueIdentifier>{2034e30a-458c-4e12-a755-54aa4e3bc3a4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Math3D">
+      <UniqueIdentifier>{07cdac31-8bf8-4ef9-b38d-635955603e5d}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Object">
+      <UniqueIdentifier>{a3666774-3e8e-4ac5-9e81-547a332864a7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="源文件\Transform">
+      <UniqueIdentifier>{1dd71190-b164-4bbf-a4c6-741fe3f95fa8}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="JayEngineMain.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="JayPipeline.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="JayCamera.cpp">
+      <Filter>源文件\Camera</Filter>
+    </ClCompile>
+    <ClCompile Include="JayLight.cpp">
+      <Filter>源文件\Light</Filter>
+    </ClCompile>
+    <ClCompile Include="JayMath3D.cpp">
+      <Filter>源文件\Math3D</Filter>
+    </ClCompile>
+    <ClCompile Include="JayObject.cpp">
+      <Filter>源文件\Object</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="JayHeader.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="JayCamera.h">
+      <Filter>源文件\Camera</Filter>
+    </ClInclude>
+    <ClInclude Include="JayLight.h">
+      <Filter>源文件\Light</Filter>
+    </ClInclude>
+    <ClInclude Include="JayMath3D.h">
+      <Filter>源文件\Math3D</Filter>
+    </ClInclude>
+    <ClInclude Include="JayObject.h">
+      <Filter>源文件\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="JayTransform.h">
+      <Filter>源文件\Transform</Filter>
+    </ClInclude>
+    <ClInclude Include="JayPipeline.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
+      <Filter>源文件\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="JayShader.h">
+      <Filter>源文件\Object</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
