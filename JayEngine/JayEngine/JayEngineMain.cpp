@@ -172,7 +172,7 @@ int main() {
 
 	std::cout << "========= 其他功能控制键 ============" << std::endl;
 	std::cout << "\t" << "Ctrl + B: " << "背面剔除" << std::endl;
-	std::cout << "\t" << "Ctrl + C: " << "2D裁剪(经3D裁剪的图形有问题)" << std::endl;
+	std::cout << "\t" << "Ctrl + C: " << "2D裁剪(目前存在问题对于ground)" << std::endl;
 	std::cout << "=====================================" << std::endl;
 
 	// 初始化窗口
