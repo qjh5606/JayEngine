@@ -1,3 +1,4 @@
+
 # JayEngine
 a soft render based on mini3d
 
@@ -5,8 +6,12 @@ a soft render based on mini3d
 > [光栅化Demo1](https://www.cnblogs.com/zhangbaochong/p/5751111.html)
 > [tinyEngine](https://github.com/sdlwlxf1/tinyEngine)
 
-> [我的博客项目链接](https://blog.csdn.net/qjh5606)
+---
 
+> [我的项目链接](https://blog.csdn.net/qjh5606)
+> [我的Github项目链接](https://github.com/qjh5606/JayEngine)
+
+--- 
 ## 概述
 - 光栅化是实时渲染领域的核心
 - 之前没有系统地学习过图形学,想借由这次做软件渲染器的学习机会了解一些基础的图形学算法.主要是光栅化的过程.
@@ -36,4 +41,5 @@ a soft render based on mini3d
 - 阴影
 - 简单着色器
 
-
+## 2019年4月5日
+![Demo1](https://img-blog.csdnimg.cn/20190405172157547.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FqaDU2MDY=,size_16,color_FFFFFF,t_70)
