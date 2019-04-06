@@ -1,0 +1,50 @@
+﻿  JayMath3D.cpp
+e:\jzchen\learningworkspace\jayengine\jayengine\jaymath3d.h(143): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+e:\jzchen\learningworkspace\jayengine\jayengine\jaymath3d.h(146): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+  正在生成代码...
+  正在编译...
+  JayPipeline.cpp
+e:\jzchen\learningworkspace\jayengine\jayengine\jaymath3d.h(143): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+e:\jzchen\learningworkspace\jayengine\jayengine\jaymath3d.h(146): warning C4554: “&”: 检查运算符优先级可能存在的错误；使用圆括号阐明优先级
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(41): warning C4018: “>”: 有符号/无符号不匹配
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(42): warning C4018: “>”: 有符号/无符号不匹配
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(72): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(73): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(74): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(75): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(78): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(79): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(80): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(81): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(84): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(85): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(86): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(87): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(90): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(91): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(92): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(93): warning C4244: “=”: 从“IUINT32”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jayobject.h(116): warning C4018: “<”: 有符号/无符号不匹配
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(6): warning C4018: “<”: 有符号/无符号不匹配
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(27): warning C4018: “<”: 有符号/无符号不匹配
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(62): warning C4244: “初始化”: 从“float”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(63): warning C4244: “初始化”: 从“float”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(144): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(148): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(152): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(156): warning C4244: “=”: 从“int”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(521): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(527): warning C4244: “初始化”: 从“int”转换到“float”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(529): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(531): warning C4244: “=”: 从“double”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(535): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(539): warning C4244: “参数”: 从“double”转换到“int”，可能丢失数据
+e:\jzchen\learningworkspace\jayengine\jayengine\jaypipeline.cpp(638): warning C4244: “=”: 从“double”转换到“float”，可能丢失数据
+  正在生成代码...
+  正在跳过...(未检测到相关更改)
+  JayObject.cpp
+  JayLight.cpp
+  JayEngineMain.cpp
+  JayCamera.cpp
+  JayEngine.vcxproj -> E:\JZChen\LearningWorkSpace\JayEngine\Debug\JayEngine.exe
+  JayEngine.vcxproj -> E:\JZChen\LearningWorkSpace\JayEngine\Debug\JayEngine.pdb (Partial PDB)

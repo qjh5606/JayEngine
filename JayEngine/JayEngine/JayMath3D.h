@@ -147,7 +147,7 @@ public:
 	}
 
 	bool operator==(const Vertex& _Right) {
-		return abs(this->pos.x - _Right.pos.x)<= 1e-6 &&abs(this->pos.y- _Right.pos.y) <= 1e-6;
+		return fabs(this->pos.x - _Right.pos.x)<= 1e-6 &&fabs(this->pos.y- _Right.pos.y) <= 1e-6;
 	}
 
 };
