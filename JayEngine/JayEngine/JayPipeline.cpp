@@ -33,11 +33,14 @@ void Pipeline::Draw() {
 		transform.model = curObeject->model_matrix;
 		transform.update_transform();
 
-		Vertex *mesh = curObeject->model->mesh;
-		int mesh_num = curObeject->model->mesh_num;
+		for (int k = 0; k < curObeject->models.size(); k++) {
+			curObeject->Curmodel = curObeject->models[k];
+			Vertex *mesh = curObeject->Curmodel->mesh;
+			int mesh_num = curObeject->Curmodel->mesh_num;
 
-		for (int j = 0; j < mesh_num; j += 3) {
-			clip_polys(&mesh[j], &mesh[j + 1], &mesh[j + 2], false);
+			for (int j = 0; j < mesh_num; j += 3) {
+				clip_polys(&mesh[j], &mesh[j + 1], &mesh[j + 2], false);
+			}
 		}
 	}
 }
@@ -214,6 +217,7 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 	}
 
 	// 背面剔除
+#if 1
 	if (CULLBACK) {
 		if (this->cull > 0) {
 			Point t21, t32;
@@ -228,8 +232,11 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 			}
 		}
 	}
+#endif
 
 	// 2D图像空间裁剪
+	//CLIP2D = true;
+	//this->render_state = RENDER_STATE_TEXTURE;
 	if (CLIP2D) {
 		// 2D图像空间裁剪算法: 给了三个点.和一矩形窗口.进行2D空间的裁剪
 		std::vector<Vertex> VertexSet;// 会有重复的点
@@ -272,7 +279,8 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 				draw_line((int)t3->pos.x, (int)t3->pos.y, (int)t2->pos.x, (int)t2->pos.y, foreground);
 			}
 		}
-	} else { // # CLIP2D
+	} 
+	else { // # CLIP2D
 		// 根据屏幕坐标进行采样
 		// 计算光照需要用的世界坐标系
 		if (this->render_state & (RENDER_STATE_TEXTURE | RENDER_STATE_COLOR)) {
@@ -444,7 +452,7 @@ void Pipeline::device_draw_scanline(Scanline* scanline) {
 	IUINT32 *f = framebuffer + y*this->width;
 	float *z = zbuffer + y*this->width;
 
-	Texture* tex = curObeject->texture;
+	Texture* tex = curObeject->Curtexture;
 
 	for (; scanline_w > 0; x++, scanline_w--) {
 		if (x >= 0 && x < width) {

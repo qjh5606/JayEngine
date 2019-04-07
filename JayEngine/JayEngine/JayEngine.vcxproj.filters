@@ -71,10 +71,13 @@
     <ClInclude Include="JayPipeline.h">
       <Filter>源文件</Filter>
     </ClInclude>
-    <ClInclude Include="tiny_obj_loader.h">
+    <ClInclude Include="JayShader.h">
       <Filter>源文件\Object</Filter>
     </ClInclude>
-    <ClInclude Include="JayShader.h">
+    <ClInclude Include="stb_image.h">
+      <Filter>源文件\Object</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny_obj_loader.h">
       <Filter>源文件\Object</Filter>
     </ClInclude>
   </ItemGroup>

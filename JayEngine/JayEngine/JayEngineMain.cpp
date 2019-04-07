@@ -175,7 +175,7 @@ int main() {
 	std::cout << "\t" << "Ctrl + C: " << "2D裁剪(目前存在问题对于ground)" << std::endl;
 	std::cout << "=====================================" << std::endl;
 
-	// 初始化窗口
+	/// 初始化窗口
 	if (screen_init(SCREEN_WIDTH, SCREEN_HEIGHT, title))
 		return -1;
 	int states[] = { RENDER_STATE_TEXTURE, RENDER_STATE_COLOR, RENDER_STATE_WIREFRAME };
@@ -232,11 +232,25 @@ int main() {
 	// ===================== 加载物体模型 ======================// 
 	/// 共享资源创建 纹理,材质
 	Texture *defaultTexure = new Texture();// 初始化纹理
+	Texture *groundTexture = new Texture(string("dimian.png"));
+	Texture *BoxTexture = new Texture(string("mabu.png"));
+
 	Material *defaultMaterial = &m1;// 初始化材质
+
+	/// 加载人型模型和材质
+	Object *nanosuit = new Object();
+	nanosuit->make_mesh_and_material_by_obj("nanosuit.obj");
+	nanosuit->pos = { 0, 0, 0, 1 };
+	nanosuit->scale = { 0.1f,0.1f, 0.1f, 0 };
+	nanosuit->axis = { 0, 1, 0, 1 };
+	nanosuit->theta = 60.0f;
+	nanosuit->shadow = false;
+	nanosuit->dirty = true;
+	nanosuit->Curtexture = nanosuit->textures[8];
 
 	/// 模型一
 	Model *groundModel = new Model(ground_mesh, 6);
-	Object *ground = new Object(groundModel, NULL, NULL);
+	Object *ground = new Object(groundModel, NULL, groundTexture);
 	ground->pos = { 0, 0, 0, 1 };
 	ground->scale = { 20, 1, 20, 0 };
 	ground->axis = { 0, 0, 0, 1 };
@@ -246,7 +260,7 @@ int main() {
 
 	/// 模型二
 	Model *boxModel = new Model(box_mesh, 36);
-	Object *box = new Object(boxModel, defaultMaterial, defaultTexure);
+	Object *box = new Object(boxModel, defaultMaterial, BoxTexture);
 	box->pos = { -0.5, 2, 0, 1 };
 	box->scale = { 0.3f, 0.3f, 0.3f, 0 };
 	box->axis = { 0, 1, 0, 1 };
@@ -254,14 +268,14 @@ int main() {
 	box->shadow = false;
 	box->dirty = true;
 
-	Object *box1 = new Object(boxModel, defaultMaterial, defaultTexure);
+	Object *box1 = new Object(boxModel, defaultMaterial, BoxTexture);
 	box1->pos = { 1.5, 2, -1, 1 };
 	box1->scale = { 0.5, 0.5, 0.5, 0 };
 	box1->axis = { 1, 0, 1, 1 };
 	box1->theta = 0.0f;
 	box1->shadow = false;
 	box1->dirty = true;
-	
+
 	Model *planeModel = new Model(triangle_mesh, 3);
 	Object *debugTrianle = new Object(planeModel, defaultMaterial, defaultTexure);
 	debugTrianle->pos = { 0.5, 3, -1, 1 };
@@ -270,13 +284,15 @@ int main() {
 	debugTrianle->theta = 0.0f;
 	debugTrianle->shadow = false;
 	debugTrianle->dirty = true;
+	//pipeline.objects.push_back(debugTrianle);
 
+	// 加载物体 
+	pipeline.objects.push_back(nanosuit);
 	pipeline.objects.push_back(ground);
 	pipeline.objects.push_back(box);
 	pipeline.objects.push_back(box1);
-	//pipeline.objects.push_back(debugTrianle);
 
-	pipeline.render_state = RENDER_STATE_TEXTURE;
+	pipeline.render_state = RENDER_STATE_WIREFRAME;
 
 	// 渲染主循环
 	while (screen_exit == 0 && screen_keys[VK_ESCAPE] == 0) {
@@ -348,13 +364,12 @@ int main() {
 			pipeline.mainCamera->dirty = true;
 		}
 
-		if (screen_keys[VK_C]){
+		if (screen_keys[VK_C]) {
 			if (kbhit1 == 0) {
 				kbhit1 = 1;
 				pipeline.CLIP2D = !pipeline.CLIP2D;
 			}
-		}
-		else {
+		} else {
 			kbhit1 = 0;
 		}
 		if (screen_keys[VK_B]) {
@@ -377,7 +392,7 @@ int main() {
 		box->dirty = true;
 		box1->theta += 0.003f;
 		box1->dirty = true;
-		
+
 		/// 清空数据
 		screen_dispatch();
 		pipeline.clear();
