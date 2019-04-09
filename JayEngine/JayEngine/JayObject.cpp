@@ -64,15 +64,8 @@ Vertex triangle_mesh[3] = {
 };
 
 
-// 材质
-Material m1 = { "",{ 0.2f, 0.2f, 0.2f },{ 0.5f, 0.5f, 0.5f },{ 0.2f, 0.2f, 0.2f },{ 0.5f, 0.5f, 0.5f },{ 0.5f, 0.5f, 0.5f }, 32.0f, 1.0f, 1.0f, 1, 1, "", -1, "", 2, "", -1, "", -1, "", -1, "", -1, "", -1 };
-//Material m2 = { "mabu", { 0.2f, 0.2f, 0.2f }, { 0.5f, 0.5f, 0.5f }, { 0.2f, 0.2f, 0.2f }, { 0.5f, 0.5f, 0.5f }, { 0.5f, 0.5f, 0.5f }, 32.0f, 1.0f, 1.0f, 1, 1, NULL, -1, "", 1, NULL, -1, NULL, -1, NULL, -1, NULL, -1, NULL, -1 };
-
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
-
-
 // ============================================= 纹理 ============================================= // 
 
 
@@ -161,6 +154,36 @@ IUINT32 Texture::readTexture(float u, float v) {
 	y = CMID(y, 0, height - 1);
 	return datas[0][y*width + x];
 }
+
+// 纹理采样与插值
+Color Texture::readTextureCorlor(float u, float v) {
+	// TODO: 插值与mipmap
+	Color color;
+	IUINT32 res;
+	int x, y;
+	u = u * (width - 1);
+	v = v * (height - 1);
+	x = (int)(u + 0.5f);
+	y = (int)(v + 0.5f);
+	x = CMID(x, 0, width - 1);
+	y = CMID(y, 0, height - 1);
+	res = datas[0][y*width + x];
+	
+	int a = (res >> 24) & 0xff;
+	int r = (res >> 16) & 0xff;
+	int g = (res >> 8) & 0xff;
+	int b = res & 0xff;
+	
+	color.a = a;
+	color.r = r;
+	color.g = g;
+	color.b = b;
+
+	Color_scale(&color, 1.0f / 255);
+	return color;
+}
+
+
 
 void Texture::generate_mipmaps(float gamma) {
 	IUINT32** mipmaps = NULL;
@@ -490,8 +513,10 @@ bool Object::make_mesh_and_material_by_obj(const char* filename, const char* bas
 	std::cout << "# of shapes    : " << shapes.size() << std::endl;
 	std::cout << "# of materials : " << materials.size() << std::endl;
 
+	std::map<std::string, Material*> MaterialMap;
 	///1. 获取各种材质和纹理
 	{
+		
 		for (int i = 0; i < materials.size(); i++) {
 			Material* m = new Material();
 			tinyobj::material_t tm = materials[i];
@@ -499,6 +524,7 @@ bool Object::make_mesh_and_material_by_obj(const char* filename, const char* bas
 			if (name.size()) {
 				m->name = name;
 			}
+			// 读取材质的信息
 			m->ambient.r = tm.ambient[0];
 			m->ambient.g = tm.ambient[1];
 			m->ambient.b = tm.ambient[2];
@@ -591,7 +617,8 @@ bool Object::make_mesh_and_material_by_obj(const char* filename, const char* bas
 				}
 			}
 
-			this->materials.push_back(m);
+			// 放进map中
+			MaterialMap[m->name]=m;
 		}
 
 
@@ -607,18 +634,23 @@ bool Object::make_mesh_and_material_by_obj(const char* filename, const char* bas
 			}
 
 			// 这部分的名称
-			printf("shape[%ld].name = %s\n", static_cast<long>(i),
-				shapes[i].name.c_str());
+			//printf("shape[%ld].name = %s\n", static_cast<long>(i),
+			//	shapes[i].name.c_str());
 			// 网格的点数
-			printf("Size of shape[%ld].mesh.indices: %lu\n", static_cast<long>(i),
-				static_cast<unsigned long>(shapes[i].mesh.indices.size()));
+			//printf("Size of shape[%ld].mesh.indices: %lu\n", static_cast<long>(i),
+			//	static_cast<unsigned long>(shapes[i].mesh.indices.size()));
 			//printf("Size of shape[%ld].path.indices: %lu\n", static_cast<long>(i),static_cast<unsigned long>(shapes[i].path.indices.size()));
 
 			//assert(shapes[i].mesh.num_face_vertices.size() == shapes[i].mesh.material_ids.size());
 			//assert(shapes[i].mesh.num_face_vertices.size() == shapes[i].mesh.smoothing_group_ids.size());
 
-			printf("shape[%ld].num_faces: %lu\n", static_cast<long>(i),
-				static_cast<unsigned long>(shapes[i].mesh.num_face_vertices.size()));
+			//printf("shape[%ld].num_faces: %lu\n", static_cast<long>(i),
+			//	static_cast<unsigned long>(shapes[i].mesh.num_face_vertices.size()));
+
+			Material *m = MaterialMap[shapes[i].name];
+			if (m != NULL) {
+				this->Curmaterial = m;
+			}
 
 			Model* model = new Model(); // 每一部分的模型数据
 			// 顶点数量  = face的数量x3 
@@ -660,10 +692,22 @@ bool Object::make_mesh_and_material_by_obj(const char* filename, const char* bas
 					mesh_data[index_offset + v].normal.w = 1.0f;
 
 					// color
+					/* Use normal as color. */
+					Color c = { mesh_data[index_offset + v].normal.x ,mesh_data[index_offset + v].normal.y,mesh_data[index_offset + v].normal.z,1.0 };
+					float len = c.r*c.r + c.g*c.g + c.b*c.b;
+					if (len > 0.0f) {
+						len = (float)sqrt((double)len);
+						c.r /= len;
+						c.g /= len;
+						c.b /= len;
+					}
+					mesh_data[index_offset + v].color = c;
+					/*	
 					mesh_data[index_offset + v].color.r = 1.0f;
 					mesh_data[index_offset + v].color.g = 1.0f;
 					mesh_data[index_offset + v].color.b = 1.0f;
 					mesh_data[index_offset + v].color.a = 1.0f;
+					*/
 				}
 			
 				// 偏移

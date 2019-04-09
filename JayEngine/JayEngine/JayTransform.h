@@ -9,7 +9,7 @@
 class Transform {
 public:
 
-	Transform() { 
+	Transform() {
 		reset();
 	}
 
@@ -18,11 +18,11 @@ public:
 		this->h = height;
 	}
 
-	void setResolution(int width,int height) {
+	void setResolution(int width, int height) {
 		this->w = width;
 		this->h = height;
 	}
-	
+
 	void reset() {
 		Matrix_set_identity(&model);
 		Matrix_set_identity(&view);
@@ -70,6 +70,12 @@ public:
 		// w和z是线性关系,所以这里已经是加了 仿射映射修正的
 	}
 
+	void transform_homogenize_reverse(Vector *y, const Vector *x, float w, float width, float height) {
+		y->x = (x->x * 2 / width - 1.0f) * w;
+		y->y = (1.0f - x->y * 2 / height) * w;
+		y->z = x->z * w;
+		y->w = w;
+	}
 
 	void project_divese(Vector* v) {
 		float rhw = 1.0f / v->w;

@@ -67,7 +67,7 @@ public:
 	}
 
 	// 检查是否有光源需要产生阴影
-	void checkLights();
+	//void checkLights();
 
 	// 绘制图元
 	void device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3);
@@ -84,26 +84,38 @@ public:
 	void Draw();
 
 	// 主渲染函数
-	void device_render_trap(Trapezoid *trap);
 
+	void device_render_trap(Trapezoid *trap);
+	void device_render_trap(Trapezoid *trap, Point *points, V2F* v2f);
+
+	// 初始化扫描线
 	void  trapezoid_init_scan_line(const Trapezoid *trap, Scanline *scanline, int y);
 
 	void device_draw_scanline(Scanline* scanline);
-
+	void device_draw_scanline(Scanline* scanline, Point* points, V2F* v2f);
+		
 	// 分解三角形
 	int trapezoid_init_triangle(Trapezoid *trap, const Vertex *p1, const Vertex *p2, const Vertex *p3);
 
 	// 顶点插值
 	void vertex_interp(Vertex *y, const Vertex *x1, const Vertex *x2, float k);
 
+	// 顶点加法
 	void vertex_add(Vertex *y, const Vertex *x);
 
+	// 顶点除法
 	void vertex_division(Vertex *y, const Vertex *x1, const Vertex *x2, float w);
 
 	// 边缘插值
 	void trapezoid_edge_interp(Trapezoid *trap, float y);
 
+	// 计算加权系数
+	bool computeBarycentricCoords3d(Point *res, const Point *p0, const Point *p1, const Point *p2, const Point *p);
+
 	// 
+	void v2f_interpolating(V2F *dest, const V2F *src1, const V2F *src2, const V2F *src3, float a, float b, float c);
+
+	// 画线 
 	void draw_line(int x1, int y1, int x2, int y2, IUINT32 c);
 	// 画点
 	void device_pixel(int x, int y, IUINT32 color);
@@ -119,14 +131,21 @@ public:
 	Camera *mainCamera;				// 主相机
 	Camera *curCamera;				// 目前正在使用的相机
 
-	Shader shader;					// 着色器 (顶点着色器 着色器)
-	 
 	vector<Object*> objects;		// 物体	(模型 材质 纹理)
 	Object* curObeject;
 
 	Transform transform;			// 获取物体model和摄像机的camera进行Transform
 
-	vector<Light*> lights;			// 光源
+	// 光源
+	vector<DirLight*> dirLights;
+	vector<PointLight*> pointLights;
+
+	Shader shader;					// 着色器数据
+	
+	// 顶点着色器
+	void vert_shader(A2V *av, V2F *vf);
+	// 片段着色器
+	void frag_shader(V2F *vf,Color *color);
 
 
 	// ====================== 裁剪与剔除 ======================= //

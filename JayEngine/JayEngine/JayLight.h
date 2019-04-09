@@ -13,22 +13,10 @@ typedef enum {
 	SPOTLIGHT = 2  // 聚光灯
 } LightType;
 
-class Light {
-public:
-	int lightType;
-	bool shadow;
-};
-
 // 点光源
-class PointLight :public Light {
+class PointLight{
 public:
-	PointLight() {
-		this->lightType = POINTLIGHT;
-	}
-
 	PointLight(Point pos,float constant,float linear,float quadratic,Color ambi,Color diff,Color spec,bool shadow) {
-		this->lightType = POINTLIGHT;
-
 		this->pos = pos;
 		this->constant = constant;
 		this->linear = linear;
@@ -45,19 +33,13 @@ public:
 	Color ambi;
 	Color diff;
 	Color spec;
+	bool shadow;
 };
 
 // 平行光
-class DirLight :public Light {
+class DirLight{
 public:
-
-	DirLight() {
-		this->lightType = DIRLIGHT;
-	}
-
-	DirLight(Color dir,Color ambi,Color diff,Color spec,bool shadow) {
-		this->lightType = DIRLIGHT;
-	
+	DirLight(Vector dir,Color ambi,Color diff,Color spec,bool shadow) {
 		this->dir = dir;
 		this->ambi = ambi;
 		this->diff = diff;
@@ -65,10 +47,11 @@ public:
 		this->shadow = shadow;
 	}
 
-	Color dir;
+	Vector dir;
 	Color ambi;
 	Color diff;
 	Color spec;
+	bool shadow;
 };
 
 

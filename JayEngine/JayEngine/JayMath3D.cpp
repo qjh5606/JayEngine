@@ -57,6 +57,20 @@ void Vector_interp(Vector *z, const Vector *x1, const Vector *x2, float t) {
 	z->w = interp(x1->w, x2->w, t); // 1/w其实
 }
 
+
+void Vector_clone(Vector *dest, const Vector *src) {
+	dest->x = src->x;
+	dest->y = src->y;
+	dest->z = src->z;
+	dest->w = src->w;
+}
+
+void Vector_reflect(Vector* r, const Vector *v, const Vector* n) {
+	Vector_clone(r, n);
+	Vector_scale(r, -2 * Vector_dotproduct(v, n));
+	Vector_add(r, r, v);
+}
+
 // 矢量归一化
 void Vector_normalize(Vector *v) {
 	float length = Vector_length(v);
@@ -74,6 +88,13 @@ void Vector_scale(Vector *v, float k) {
 	v->z *= k;
 	v->w *= k;
 }
+
+void Vector_inverse(Vector *v) {
+	v->x = -v->x;
+	v->y = -v->y;
+	v->z = -v->z;
+}
+
 
 // c = a + b
 void Matrix_add(Matrix *c, const Matrix *a, const Matrix *b) {
@@ -345,4 +366,89 @@ void Vertex_rhw_init(Vertex* v) {
 	v->color.g *= rhw;
 	v->color.b *= rhw;
 	// 法向量
+}
+
+// 插值 3个点插值一个点
+void Vector_interpolating(Vector *dest,
+	const Vector *src1, const Vector *src2, const Vector *src3,
+	float a, float b, float c) {
+	dest->x = dest->y = dest->z = dest->w = 0.0f;
+	Vector each = *src1;
+	Vector_scale(&each, a);
+	Vector_add(dest, dest, &each);
+	each = *src2;
+	Vector_scale(&each, b);
+	Vector_add(dest, dest, &each);
+	each = *src3;
+	Vector_scale(&each, c);
+	Vector_add(dest, dest, &each);
+}
+
+void Color_scale(Color* c, float k) {
+	c->r *= k;
+	c->g *= k;
+	c->b *= k;
+	c->a *= k;
+}
+
+void Color_add(Color* c, Color* a, Color *b) {
+	c->r = a->r + b->r;
+	c->g = a->g + b->g;
+	c->b = a->b + b->b;
+	c->a = a->a + b->a;
+}
+
+void Color_sub(Color *c, const Color *a, const Color *b) {
+	c->r = a->r - b->r;
+	c->g = a->g - b->g;
+	c->b = a->b - b->b;
+	c->a = a->a - b->a;
+}
+
+void Color_product(Color *c, const Color *a, const Color *b) {
+	c->r = a->r * b->a;
+	c->g = a->g * b->g;
+	c->b = a->b * b->b;
+	c->a = a->a * b->a;
+}
+
+
+
+void Color_interpolating(Color *dest, const Color *src1, const Color *src2, const Color *src3, float a, float b, float c) {
+	dest->r = dest->g = dest->b = dest->a = 0.0f;
+	Color each = *src1;
+	Color_scale(&each, a);
+	Color_add(dest, dest, &each);
+	each = *src2;
+	Color_scale(&each, b);
+	Color_add(dest, dest, &each);
+	each = *src3;
+	Color_scale(&each, c);
+	Color_add(dest, dest, &each);
+}
+
+// 纹理缩放
+void Texcoord_scale(Texcoord *t, float k) {
+	t->u *= k;
+	t->v *= k;
+}
+
+// 纹理缩放
+void Texcoord_add(Texcoord *c, const Texcoord *a, const Texcoord *b) {
+	c->u = a->u + b->u;
+	c->v = a->v + b->v;
+}
+
+// 纹理插值
+void Texcoord_interpolating(Texcoord *dest, const Texcoord *src1, const Texcoord *src2, const Texcoord *src3, float a, float b, float c) {
+	dest->u = dest->v = 0.0f;
+	Texcoord each = *src1;
+	Texcoord_scale(&each, a);
+	Texcoord_add(dest, dest, &each);
+	each = *src2;
+	Texcoord_scale(&each, b);
+	Texcoord_add(dest, dest, &each);
+	each = *src3;
+	Texcoord_scale(&each, c);
+	Texcoord_add(dest, dest, &each);
 }

@@ -1,15 +1,6 @@
 #include "JayPipeline.h"
 
 
-// 检查光源
-void Pipeline::checkLights() {
-	for (int i = 0; i < lights.size(); i++) {
-		if (lights[i]->shadow == true) {
-			// 增加一个摄像机
-		}
-	}
-}
-
 // 设置当前正在使用的相机
 void Pipeline::setCurCamera(Camera* camera) {
 	curCamera = camera;
@@ -34,6 +25,7 @@ void Pipeline::Draw() {
 		transform.update_transform();
 
 		for (int k = 0; k < curObeject->models.size(); k++) {
+
 			curObeject->Curmodel = curObeject->models[k];
 			Vertex *mesh = curObeject->Curmodel->mesh;
 			int mesh_num = curObeject->Curmodel->mesh_num;
@@ -44,8 +36,6 @@ void Pipeline::Draw() {
 		}
 	}
 }
-
-
 
 
 // Cohen–Sutherland是一个线段裁剪算法
@@ -99,6 +89,7 @@ void Pipeline::sortVertexs(std::vector<Vertex> &VertexSet, int size) {
 	}
 	x /= size;
 	y /= size;
+	// 冒泡排序
 	for (int i = 0; i < size; i++) {
 		for (int j = 0; j < size - i - 1; j++) {
 			if (PointCmp(VertexSet[j], VertexSet[j + 1], x, y)) {
@@ -185,17 +176,182 @@ void Pipeline::clip_lines(Vertex v1, Vertex v2, std::vector<Vertex> &VertexSet) 
 }
 
 
+void Pipeline::vert_shader(A2V *av, V2F *vf) {
+	vf->pos = av->pos;
+	vf->normal = av->normal;
+	vf->color = av->color;
+	vf->texcoord = av->texcoord;
+}
+
+void Pipeline::frag_shader(V2F *vf, Color *color){
+
+	// 当前物体的材质
+	Material *material = this->curObeject->Curmaterial;
+	std::vector<Texture*> texs = curObeject->textures;
+
+	Vector viewdir; // 相机的观察向量
+	Vector viewPos = this->curCamera->pos;// 当前相机
+	Vector_sub(&viewdir, &viewPos, &vf->pos);
+	Vector_normalize(&viewdir);
+	
+	// 当前纹理坐标
+	Texcoord *tex = &vf->texcoord;
+	// 当前法向量
+	Vector normal = vf->normal;
+
+	// 平行光的光源方向
+	if (this->dirLights.size()) {
+		DirLight *dirLight = this->dirLights[0];
+		Vector lightdir = dirLight->dir;
+		Vector_inverse(&lightdir);
+		Vector_normalize(&lightdir);
+
+		// 漫反射
+		float diff = fmax(0.0, Vector_dotproduct(&normal, &lightdir));
+
+		// 高光反射
+		Vector vec;
+		Vector_reflect(&vec, &lightdir, &normal);
+
+		// tmp += cur->bump_tex_id == -1 ? 0x0 : texs[cur->bump_tex_id]->readTexture(u, v);
+		float shininess = 1.0f;
+		if (material->specular_highlight_tex_id != -1) {
+			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
+		}
+		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
+
+		// 材质
+		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
+		Color temp2 = material->ambient;
+		if (material->ambient_tex_id != -1) {
+			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->ambi, &temp2);
+		Color_add(color, color, &temp);
+
+		temp2 = material->diffuse;
+		if (material->diffuse_tex_id != -1) {
+			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->diff, &temp2);
+		Color_scale(&temp, diff);
+		Color_add(color, color, &temp);
+
+		temp2 = material->specular;
+		if (material->specular_tex_id != -1) {
+			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->spec, &temp2);
+		Color_scale(&temp, spec);
+		Color_add(color, color, &temp);
+
+
+		// 平行光的阴影生成
+		// TODO
+	}
+
+	for (int i = 0; i < this->pointLights.size(); i++) {
+
+		PointLight* pointlight = pointLights[i];
+
+		Vector lightDir = { 0.0f, 0.0f ,0.0f, 0.0f };
+
+		Vector_sub(&lightDir, &pointlight->pos, &vf->pos);
+		float distance = Vector_length(&lightDir);  // 距离
+		Vector_normalize(&lightDir); // 归一化
+		
+		// 漫反射
+		float diff = fmaxf(0.0, Vector_dotproduct(&lightDir, &vf->normal));
+		
+		// 高光反射
+		Vector vec;
+		Vector_inverse(&lightDir);
+		Vector_reflect(&vec, &lightDir, &normal);
+
+		float shininess = 1.0f;
+		if (material->specular_highlight_tex_id != -1) {
+			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
+		}
+		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
+		
+		// attenuation 衰减
+		float num = pointlight->constant + pointlight->linear * distance + pointlight->quadratic * (distance * distance);
+		float attenuation = 0;
+		if (num != 0)
+			attenuation = 1.0f / num;
+
+		// 材质
+		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
+		Color c ={ 0.0f, 0.0f, 0.0f, 1.0f };
+		Color temp2 = material->ambient;
+		if (material->ambient_tex_id != -1) {
+			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->ambi, &temp2);
+		Color_scale(&c, attenuation);
+		Color_add(&temp, &temp, &c);
+
+		temp2 = material->diffuse;
+		if (material->diffuse_tex_id != -1) {
+			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->diff, &temp2);
+		Color_scale(&c, attenuation*diff);
+		Color_add(&temp, &temp, &c);
+
+		temp2 = material->specular;
+		if (material->specular_tex_id != -1) {
+			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->spec, &temp2);
+		Color_scale(&c, attenuation*spec);
+		Color_add(&temp, &temp, &c);
+
+		// 最后累加到颜色
+		Color_add(color, color, &temp);
+	}
+}
+
 // 绘制 输入的三个顶点t1,t2,t3 都是世界坐标系
 void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
-
 	Vertex *vertice[3] = { t1,t2,t3 };
 	Point points[3];
+
+	// 法线矩阵求解
+	// 由于法线在世界坐标系中使用,所以 法线矩阵为 (Model)逆的转置
+	Matrix nm; // model
+	Matrix_clone(&nm, &transform.model);
+	Matrix_inverse(&nm);
+	Matrix_transpose(&nm);
+
+	// 着色器
+	Shader shader;
 
 	// 投影 未进行透视除法
 	for (int i = 0; i < 3; i++) {
 		auto vertex = vertice[i];
+	
+		A2V *av = &shader.a2v[i];
+		V2F *vf = &shader.v2f[i];
+		av->pos = vertex->pos; // 记录世界空间的pos 
+
+		// 变换到投影空间
 		Matrix_apply(&vertex->pos, &vertex->pos, &transform.vp);
 		points[i] = vertex->pos; // 透视空间的pos,保存了w分量
+
+		// 求解世界坐标系下的法线向量,并归一化
+		Matrix_apply(&vertex->normal, &vertex->normal, &nm);
+		Vector_normalize(&vertex->normal);
+
+		av->normal = vertex->normal;
+		av->color = vertex->color;
+		av->texcoord = vertex->tc;
+
+		// ====== 截止这里 
+		// av->pos,av->normal 世界坐标系
+		// points[i] 顶点的透视空间的pos
+		// 传递数据
+		vert_shader(av, vf);
 	}
 
 	// 简单cvv裁剪,判断点全部落在 -w<= x,y <= w ; 0<=z<=w
@@ -208,11 +364,11 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 #endif
 
 	// 透视除法 + 视口变化
-	// x,y->屏幕坐标
-	// z-> z/w [0..1]
-	// w变成了1/w;
 	for (int i = 0; i < 3; i++) {
 		auto vertex = vertice[i];
+		// x,y->屏幕坐标
+		// z-> z/w [0..1]
+		// w变成了1/w;
 		transform.transform_homogenize(&vertex->pos, &vertex->pos);
 	}
 
@@ -269,8 +425,10 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 
 				int n = trapezoid_init_triangle(traps, t1, t2, t3);
 				// 0:平底,1:平顶
-				if (n >= 1) device_render_trap(&traps[0]);
-				if (n >= 2) device_render_trap(&traps[1]);
+				//if (n >= 1) device_render_trap(&traps[0]);
+				//if (n >= 2) device_render_trap(&traps[1]);
+				if (n >= 1) device_render_trap(&traps[0],points, shader.v2f);
+				if (n >= 2) device_render_trap(&traps[1], points, shader.v2f);
 			}
 
 			if ((this->render_state & RENDER_STATE_WIREFRAME) && this->framebuffer != NULL) {
@@ -288,8 +446,10 @@ void Pipeline::device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3) {
 
 			int n = trapezoid_init_triangle(traps, t1, t2, t3);
 			// 0:平底,1:平顶
-			if (n >= 1) device_render_trap(&traps[0]);
-			if (n >= 2) device_render_trap(&traps[1]);
+			//if (n >= 1) device_render_trap(&traps[0]);
+			//if (n >= 2) device_render_trap(&traps[1]);
+			if (n >= 1) device_render_trap(&traps[0], points, shader.v2f);
+			if (n >= 2) device_render_trap(&traps[1], points, shader.v2f);
 		}
 
 		if ((this->render_state & RENDER_STATE_WIREFRAME) && this->framebuffer != NULL) {
@@ -441,7 +601,145 @@ void Pipeline::vertex_add(Vertex *y, const Vertex *x) {
 	y->color.b += x->color.b;
 }
 
-// 绘制扫描线
+
+// 计算重心加权
+bool Pipeline::computeBarycentricCoords3d(Point *res,
+	const Point *p0, const Point *p1, const Point *p2, const Point *p) {
+
+	Vector d1, d2, n;
+	Vector_sub(&d1, p1, p0);
+	Vector_sub(&d2, p2, p1);
+	Vector_crossproduct(&n, &d1, &d2);
+	float u1, u2, u3, u4;
+	float v1, v2, v3, v4;
+	if ((fabs(n.x) >= fabs(n.y)) && (fabs(n.x) >= fabs(n.z))) {
+		u1 = p0->y - p2->y;
+		u2 = p1->y - p2->y;
+		u3 = p->y - p0->y;
+		u4 = p->y - p2->y;
+		v1 = p0->z - p2->z;
+		v2 = p1->z - p2->z;
+		v3 = p->z - p0->z;
+		v4 = p->z - p2->z;
+	} else if (fabs(n.y) >= fabs(n.z)) {
+		u1 = p0->z - p2->z;
+		u2 = p1->z - p2->z;
+		u3 = p->z - p0->z;
+		u4 = p->z - p2->z;
+		v1 = p0->x - p2->x;
+		v2 = p1->x - p2->x;
+		v3 = p->x - p0->x;
+		v4 = p->x - p2->x;
+	} else {
+		u1 = p0->x - p2->x;
+		u2 = p1->x - p2->x;
+		u3 = p->x - p0->x;
+		u4 = p->x - p2->x;
+		v1 = p0->y - p2->y;
+		v2 = p1->y - p2->y;
+		v3 = p->y - p0->y;
+		v4 = p->y - p2->y;
+	}
+
+	float denom = v1 * u2 - v2 * u1;
+	if (fabsf(denom) < 1e-6) {
+		return false;
+	}
+	float oneOverDenom = 1.0f / denom;
+	res->x = (v4 * u2 - v2 * u4) * oneOverDenom;
+	res->y = (v1 * u3 - v3 * u1) * oneOverDenom;
+	res->z = 1.0f - res->x - res->y;
+	return true;
+
+
+}
+
+// V2F加权
+void Pipeline::v2f_interpolating(V2F *dest, const V2F *src1, const V2F *src2, const V2F *src3, float a, float b, float c) {
+	Vector_interpolating(&dest->pos,&src1->pos, &src2->pos, &src3->pos, a, b, c);
+	Vector_interpolating(&dest->normal, &src1->normal, &src2->normal, &src3->normal, a, b, c);
+	Color_interpolating(&dest->color, &src1->color, &src2->color, &src3->color, a, b, c);
+	Texcoord_interpolating(&dest->texcoord, &src1->texcoord, &src2->texcoord, &src3->texcoord, a, b, c);
+	// ...
+}
+
+
+
+// 绘制扫描线2
+void Pipeline::device_draw_scanline(Scanline* scanline, Point* points, V2F* vfs) {
+	int y = scanline->y;
+	int x = scanline->x; // 起始x
+	int scanline_w = scanline->w; // 宽度
+
+	for (; scanline_w > 0; x++, scanline_w--) {
+		if (x >= 0 && x < width) {
+
+			float rhw = scanline->v.pos.w; //1/w
+			
+			// 更新z缓存以及帧缓冲
+			if (this->zbuffer != NULL&&this->zbuffer[y*width + x] <= rhw) {
+				this->zbuffer[y*width + x] = rhw;
+
+				// 帧缓冲
+				if (this->framebuffer != NULL) {
+
+					Color color = { 0.0f, 0.0f, 0.0f, 1.0f };
+
+					V2F vf; // 插值出来的该点的数据
+
+					float w = 1.0f / rhw;// w
+
+					Point barycenter = { 0.0f,0.0f,0.0f,1.0f }; // 重心加权
+					// 待插值点的坐标
+					Point interpos = scanline->v.pos; // 平面坐标
+					// 转到透视空间坐标
+					transform.transform_homogenize_reverse(&interpos, &interpos, w, width, height);
+					// 加权系数计算
+					computeBarycentricCoords3d(&barycenter, &points[0], &points[1], &points[2], &interpos);
+
+					// 加权系数用于插值 该点是数据
+					v2f_interpolating(&vf, &vfs[0], &vfs[1], &vfs[2], barycenter.x, barycenter.y, barycenter.z);
+
+					vf.pos.w = w;
+					Vector_normalize(&vf.normal);
+					frag_shader(&vf, &color);
+			
+					float a = 1.0f;
+					float r = 0.0f;
+					float g = 0.0f;
+					float b = 0.0f;
+
+					// 颜色插值就直接取vf的颜色值就好
+					if (render_state & RENDER_STATE_COLOR) {
+						a = vf.color.a;
+						r = vf.color.r;
+						g = vf.color.g;
+						b = vf.color.b;
+					}
+					if (render_state & RENDER_STATE_TEXTURE) {
+						a = color.a;
+						r = color.r;
+						g = color.g;
+						b = color.b;
+					}
+					
+					int A = CMID((int)(a * 255.0f), 0, 255);
+					int R = CMID((int)(r * 255.0f), 0, 255);
+					int G = CMID((int)(g * 255.0f), 0, 255);
+					int B = CMID((int)(b * 255.0f), 0, 255);
+
+					framebuffer[y*width + x] = (R << 16) | (G << 8) | B;
+				}
+			}
+		}
+		// 增量计算
+		vertex_add(&scanline->v, &scanline->step);
+		if (x >= width) break;
+	}
+}
+
+
+// 绘制扫描线1
 void Pipeline::device_draw_scanline(Scanline* scanline) {
 
 	int y = scanline->y;
@@ -452,7 +750,7 @@ void Pipeline::device_draw_scanline(Scanline* scanline) {
 	IUINT32 *f = framebuffer + y*this->width;
 	float *z = zbuffer + y*this->width;
 
-	Texture* tex = curObeject->Curtexture;
+	//Texture* tex = curObeject->Curtexture;
 
 	for (; scanline_w > 0; x++, scanline_w--) {
 		if (x >= 0 && x < width) {
@@ -481,11 +779,24 @@ void Pipeline::device_draw_scanline(Scanline* scanline) {
 					float u = scanline->v.tc.u;
 					float v = scanline->v.tc.v;
 
-					IUINT32 cc = 0x2F4F4F;
-					if (tex != NULL) {
-						cc = tex->readTexture(u, v);
-						//cout << u << ends << v << ends << cc<< endl;
-					}
+					//IUINT32 cc = 0x2F4F4F;
+					//if (tex != NULL) {
+					//	cc = tex->readTexture(u, v);
+					//	//cout << u << ends << v << ends << cc<< endl;
+					//}
+
+					// 材质的各种纹理贴图
+					/*Color color = { 0.0f, 0.0f ,0.0f, 1.0f };
+					Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };*/
+					IUINT32 cc = 0x0;
+					IUINT32 tmp = 0x0;
+					Material* cur = curObeject->Curmaterial;
+					std::vector<Texture*> texs = curObeject->textures;
+					tmp += cur->ambient_tex_id == -1 ? 0x0 : texs[cur->ambient_tex_id]->readTexture(u, v);
+					tmp += cur->diffuse_tex_id == -1 ? 0x0 : texs[cur->diffuse_tex_id]->readTexture(u, v);
+					tmp += cur->specular_tex_id == -1 ? 0x0 : texs[cur->specular_tex_id]->readTexture(u, v);
+					tmp += cur->bump_tex_id == -1 ? 0x0 : texs[cur->bump_tex_id]->readTexture(u, v);
+					cc = tmp;
 					f[x] = cc;// 填充纹理
 				}
 			}
@@ -497,7 +808,33 @@ void Pipeline::device_draw_scanline(Scanline* scanline) {
 	}
 }
 
-// 绘制三角形
+
+
+// 输入三角形
+void Pipeline::device_render_trap(Trapezoid *trap, Point *points, V2F* v2f) {
+	// 扫描线插值
+	Scanline scanline;
+	int j, top, bottom;
+	top = (int)(trap->top + 0.5f);
+	bottom = (int)(trap->bottom + 0.5f);
+
+	for (j = top; j < bottom; ++j) {
+		// 合法
+		//j = (top + bottom) / 2;
+		if (j >= 0 && j < this->curCamera->height) {
+			// 1 根据 j坐标计算出left和right线上的两个顶点
+			trapezoid_edge_interp(trap, (float)j + 0.5f);
+			// 2. 根据左右两边的端点，初始化计算出扫描线的起点和步长
+			trapezoid_init_scan_line(trap, &scanline, j);
+			// 3. 绘制扫描线
+			device_draw_scanline(&scanline,points,v2f);
+		}
+		if (j >= height) break;
+	}
+}
+
+
+// 绘制三角形1
 void Pipeline::device_render_trap(Trapezoid *trap) {
 	// 扫描线插值
 	Scanline scanline;

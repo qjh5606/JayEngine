@@ -17,6 +17,8 @@ public:
 
 	IUINT32 readTexture(float u, float v);
 
+	Color readTextureCorlor(float u, float v);
+
 	void generate_mipmaps(float gamma);
 
 	bool make_texture_by_stb(string &path, bool mipmap=true);
@@ -37,6 +39,49 @@ public:
 */
 class Material {
 public:
+	Material() {
+
+	}
+
+	Material(std::string name, 
+		Color ambient, Color diffuse, Color specular, Color transmittance, Color emission,
+		float shininess, float ior, float dissolve,
+		int illum, int pad0,
+		std::string ambient_texname, int ambient_tex_id,
+		std::string diffuse_texname,int diffuse_tex_id,
+		std::string specular_texname,int specular_tex_id,
+		std::string specular_highlight_texname,int specular_highlight_tex_id,
+		std::string bump_texname,int bump_tex_id,
+		std::string displacement_texname,int displacement_tex_id,
+		std::string alpha_texname,int alpha_tex_id			
+	) {
+		this->name = name;
+		this->ambient = ambient;
+		this->diffuse = diffuse;
+		this->specular = specular;
+		this->transmittance = transmittance;
+		this->emission = emission;
+		this->shininess = shininess;
+		this->ior = ior;
+		this->dissolve = dissolve;
+		this->illum = illum;
+		this->pad0 = pad0;
+		this->ambient_texname = ambient_texname;
+		this->ambient_tex_id = ambient_tex_id;
+		this->diffuse_texname = diffuse_texname;
+		this->diffuse_tex_id = diffuse_tex_id;
+		this->specular_texname = specular_texname;
+		this->specular_tex_id = specular_tex_id;
+		this->specular_highlight_texname = specular_highlight_texname;
+		this->specular_highlight_tex_id = specular_highlight_tex_id;
+		this->bump_texname = bump_texname;
+		this->bump_tex_id = bump_tex_id;
+		this->displacement_texname = displacement_texname;
+		this->displacement_tex_id = displacement_tex_id;
+		this->alpha_texname = alpha_texname;
+		this->alpha_tex_id = this->alpha_tex_id;
+	}
+
 	std::string name;
 	Color ambient;
 	Color diffuse;
@@ -47,7 +92,6 @@ public:
 	float ior;      /* index of refraction */
 	float dissolve;
 	int illum;
-
 	int pad0;
 
 	// 应该需要修改数据,改成纹理的指针
@@ -92,15 +136,61 @@ public:
 	}
 
 	// 通过自定义的模型,材质和纹理进行初始化
-	Object(Model* model,Material* material,Texture* texture) {
+	Object(Model* model,Material* tm) {
 		if (model != NULL) {
 			models.push_back(model);
-			materials.push_back(material);
-			textures.push_back(texture);
-
 			this->Curmodel = model;
-			this->Curmaterial = material;
-			this->Curtexture = texture;
+			this->Curmaterial = tm;
+
+			if (tm->ambient_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->ambient_texname)) 					{
+					tm->ambient_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->diffuse_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->diffuse_texname)) {
+					tm->diffuse_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->specular_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->specular_texname)) 					{
+					tm->specular_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->specular_highlight_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->specular_highlight_texname)) {
+					tm->specular_highlight_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->bump_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->bump_texname)) {
+					tm->bump_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->displacement_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->displacement_texname)) {
+					tm->displacement_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
+			if (tm->alpha_texname.size()) {
+				Texture* tmp = new Texture();
+				if (tmp->make_texture_by_stb(tm->alpha_texname)) {
+					tm->alpha_tex_id = textures.size();
+					this->textures.push_back(tmp);
+				}
+			}
 			Matrix_set_identity(&model_matrix);
 		}
 	}
@@ -122,7 +212,7 @@ public:
 	Model* Curmodel;			// 模型:网格顶点数据
 	std::vector<Model*> models; // 所有的材质
 	Material* Curmaterial;		// 当前材质
-	std::vector<Material*> materials; // 所有的材质
+	//std::vector<Material*> materials; // 所有的材质
 
 	std::vector<Texture*> textures; // 所有的材质
 	Texture* Curtexture;		// 纹理

@@ -148,9 +148,6 @@ extern Vertex ground_mesh[6];
 extern Vertex box_mesh[36];
 extern Vertex triangle_mesh[3];
 
-// 默认材质
-extern Material m1;
-
 int main() {
 	TCHAR *title = _T("JayEngine");
 
@@ -198,13 +195,19 @@ int main() {
 
 	// ===================== 加载光源 ======================// 
 	DirLight *dirlight = new DirLight({ 0.0f, -1.0f, 1.0f, 0.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, true);
-	PointLight *pointlight = new PointLight({ 0.0f, 6.0f, 2.0f, 1.0f }, 1.0f, 0.09f, 0.032f, { 0.6f, 0.6f, 0.6f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.6f, 0.6f, 0.6f, 1.0f }, false);
-
-	pipeline.lights.push_back(dirlight);
-	pipeline.lights.push_back(pointlight);
+	PointLight *pointlight = new PointLight({ { 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f,{ 0.6f, 0.6f, 0.6f, 1.0f },{ 0.8f, 0.8f, 0.8f, 1.0f },{ 0.7f, 0.7f, 0.7f, 1.0f }, false });
+	PointLight *pointlight1 = new PointLight({ { 0.0f, 6.0f, 2.0f, 1.0f }, 1.0f, 0.09f, 0.032f, { 0.6f, 0.6f, 0.6f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.6f, 0.6f, 0.6f, 1.0f }, false });
+	PointLight *pointlight2 = new PointLight({{ 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f, { 0.6f, 0.6f, 0.6f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, false});
+	PointLight *pointlight3 = new PointLight({ { 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f,{ 0.6f, 0.6f, 0.6f, 1.0f },{ 0.8f, 0.8f, 0.8f, 1.0f },{ 0.3f, 0.3f, 0.3f, 1.0f }, false });
+	
+	pipeline.dirLights.push_back(dirlight);
+	pipeline.pointLights.push_back(pointlight);
+	pipeline.pointLights.push_back(pointlight1);
+	pipeline.pointLights.push_back(pointlight2);
+	pipeline.pointLights.push_back(pointlight3);
 
 	/// check shadows 增加阴影摄像机
-	pipeline.checkLights();
+	//pipeline.checkLights();
 
 	// ===================== 加载主摄像机 ======================// 
 	Camera *mainCamera = new Camera(
@@ -232,25 +235,40 @@ int main() {
 	// ===================== 加载物体模型 ======================// 
 	/// 共享资源创建 纹理,材质
 	Texture *defaultTexure = new Texture();// 初始化纹理
-	Texture *groundTexture = new Texture(string("dimian.png"));
-	Texture *BoxTexture = new Texture(string("mabu.png"));
+	Material *dimian = new Material(
+		"dimian", 
+		{ 0.2f, 0.2f, 0.2f }, 
+		{ 0.5f, 0.5f, 0.5f }, 
+		{ 0.2f, 0.2f, 0.2f }, 
+		{ 0.5f, 0.5f, 0.5f }, 
+		{ 0.5f, 0.5f, 0.5f }, 
+		32.0f, 1.0f, 1.0f, 1, 1, "dimian.png", -1, "", -1, "", -1, "", -1, "", -1, "", -1, "", -1
+	);
 
-	Material *defaultMaterial = &m1;// 初始化材质
+	Material *mabu = new Material(
+		 "mabu",
+		{ 0.2f, 0.2f, 0.2f },
+		{ 0.5f, 0.5f, 0.5f },
+		{ 0.2f, 0.2f, 0.2f },
+		{ 0.5f, 0.5f, 0.5f },
+		{ 0.5f, 0.5f, 0.5f },
+		32.0f, 1.0f, 1.0f, 1, 1, "mabu.png", -1, "", -1, "", -1, "", -1, "", -1, "", -1, "", -1
+	);
+
 
 	/// 加载人型模型和材质
 	Object *nanosuit = new Object();
 	nanosuit->make_mesh_and_material_by_obj("nanosuit.obj");
 	nanosuit->pos = { 0, 0, 0, 1 };
-	nanosuit->scale = { 0.1f,0.1f, 0.1f, 0 };
+	nanosuit->scale = { 0.12f,0.12f, 0.12f, 0 };
 	nanosuit->axis = { 0, 1, 0, 1 };
 	nanosuit->theta = 60.0f;
 	nanosuit->shadow = false;
 	nanosuit->dirty = true;
-	nanosuit->Curtexture = nanosuit->textures[8];
 
 	/// 模型一
 	Model *groundModel = new Model(ground_mesh, 6);
-	Object *ground = new Object(groundModel, NULL, groundTexture);
+	Object *ground = new Object(groundModel, dimian);
 	ground->pos = { 0, 0, 0, 1 };
 	ground->scale = { 20, 1, 20, 0 };
 	ground->axis = { 0, 0, 0, 1 };
@@ -260,7 +278,7 @@ int main() {
 
 	/// 模型二
 	Model *boxModel = new Model(box_mesh, 36);
-	Object *box = new Object(boxModel, defaultMaterial, BoxTexture);
+	Object *box = new Object(boxModel, mabu);
 	box->pos = { -0.5, 2, 0, 1 };
 	box->scale = { 0.3f, 0.3f, 0.3f, 0 };
 	box->axis = { 0, 1, 0, 1 };
@@ -268,7 +286,7 @@ int main() {
 	box->shadow = false;
 	box->dirty = true;
 
-	Object *box1 = new Object(boxModel, defaultMaterial, BoxTexture);
+	Object *box1 = new Object(boxModel, mabu);
 	box1->pos = { 1.5, 2, -1, 1 };
 	box1->scale = { 0.5, 0.5, 0.5, 0 };
 	box1->axis = { 1, 0, 1, 1 };
@@ -277,7 +295,7 @@ int main() {
 	box1->dirty = true;
 
 	Model *planeModel = new Model(triangle_mesh, 3);
-	Object *debugTrianle = new Object(planeModel, defaultMaterial, defaultTexure);
+	Object *debugTrianle = new Object(planeModel, mabu);
 	debugTrianle->pos = { 0.5, 3, -1, 1 };
 	debugTrianle->scale = { 1, 1, 2, 0 };
 	debugTrianle->axis = { 1, 0, 1, 1 };
@@ -292,7 +310,7 @@ int main() {
 	pipeline.objects.push_back(box);
 	pipeline.objects.push_back(box1);
 
-	pipeline.render_state = RENDER_STATE_WIREFRAME;
+	pipeline.render_state = RENDER_STATE_TEXTURE;
 
 	// 渲染主循环
 	while (screen_exit == 0 && screen_keys[VK_ESCAPE] == 0) {
@@ -305,7 +323,7 @@ int main() {
 		} else {
 			kbhit = 0;
 		}
-		float deltaTime = 3.0f / 1000;
+		float deltaTime = 4.0f / 1000;
 
 		// 控制主相机的运动 Ctrl+
 		// w 相机向前, s 相机向后 a 相机向左 d 相机向右 q相机向上 e相机向下

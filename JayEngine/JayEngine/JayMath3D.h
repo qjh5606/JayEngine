@@ -47,16 +47,25 @@ void Vector_sub(Vector *z, const Vector *x, const Vector *y);
 
 // 矢量点乘
 float Vector_dotproduct(const Vector *x, const Vector *y);
+
 // 矢量叉乘
 void Vector_crossproduct(Vector *z, const Vector *x, const Vector *y);
 
+void Vector_clone(Vector *dest, const Vector *src);
+
+void Vector_reflect(Vector* r, const Vector *v, const Vector* n);
+
 // 矢量插值，t取值 [0, 1]
 void Vector_interp(Vector *z, const Vector *x1, const Vector *x2, float t);
+
 // 矢量归一化
 void Vector_normalize(Vector *v);
 
-// cale
+// 矢量缩放
 void Vector_scale(Vector *v, float k);
+
+// 向量反向
+void Vector_inverse(Vector *v);
 
 
 // c = a + b
@@ -97,11 +106,8 @@ void Matrix_transpose(Matrix *m);
 // inverse
 void Matrix_inverse(Matrix *m);
 
-
-
 // 设置模型矩阵
 void Matrix_set_rotate_translate_scale(Matrix *m, const Vector *axis, float theta, const Point *pos, const Vector *scale);
-
 
 // D3DXMatrixPerspectiveFovLH
 // https://blog.csdn.net/zzmkljd/article/details/52870807
@@ -111,9 +117,6 @@ void Matrix_set_ortho(Matrix *m, float l, float r, float b, float t, float zn, f
 
 // 设置摄像机
 void Matrix_set_lookat(Matrix *m, const Vector *eye, const Vector *at, const Vector *up);
-
-
-
 
 // 颜色
 class Color {
@@ -125,11 +128,36 @@ public:
 	float r, g, b, a;
 };
 
+// 颜色缩放
+void Color_scale(Color* c, float k);
+
+// 颜色相加
+void Color_add(Color* c, Color* a, Color *b);
+
+// 颜色相减
+void Color_sub(Color *c, const Color *a, const Color *b);
+
+// 颜色相乘
+void Color_product(Color *c, const Color *a, const Color *b);
+
+// 颜色插值
+void Color_interpolating(Color *dest, 
+	const Color *src1, const Color *src2, const Color *src3, float a, float b, float c);
+
 // 纹理坐标
 class Texcoord {
 public:
 	float u, v;
 };
+
+// 纹理缩放
+void Texcoord_scale(Texcoord *t, float k);
+
+// 纹理缩放
+void Texcoord_add(Texcoord *c, const Texcoord *a, const Texcoord *b);
+
+// 纹理插值
+void Texcoord_interpolating(Texcoord *dest, const Texcoord *src1, const Texcoord *src2, const Texcoord *src3, float a, float b, float c);
 
 // 顶点属性
 class Vertex {
@@ -176,12 +204,10 @@ public:
 	Vertex v, step; int x, y, w;
 };
 
-
-
-
-
-
-
+// 插值 3个点插值一个点
+void Vector_interpolating(Vector *dest,
+	const Vector *src1, const Vector *src2, const Vector *src3,
+	float a, float b, float c);
 
 #endif // _JAYMATH3D_H_
 
