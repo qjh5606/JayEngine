@@ -190,24 +190,32 @@ int main() {
 	IUINT32* framebuffer = new IUINT32[SCREEN_WIDTH*SCREEN_HEIGHT];
 	float* zbuffer = new float[SCREEN_WIDTH*SCREEN_HEIGHT];
 	float* shadowbuffer = new float[SCREEN_WIDTH*SCREEN_HEIGHT];
+	
+	// 初始化shadowbuffer
+	for (int y = 0; y < SCREEN_HEIGHT; y++) {
+		for (int x = 0; x < SCREEN_WIDTH; x++) {
+			shadowbuffer[y*SCREEN_WIDTH + x] = INT_MAX;
+		}
+	}
 
-	Pipeline  pipeline(REAL_WIDTH, REAL_HEIGHT, screen_fb);
+	//Pipeline  pipeline(REAL_WIDTH, REAL_HEIGHT, screen_fb);
+	Pipeline  pipeline(REAL_WIDTH, REAL_HEIGHT, framebuffer);
 
 	// ===================== 加载光源 ======================// 
-	DirLight *dirlight = new DirLight({ 0.0f, -1.0f, 1.0f, 0.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, true);
+	DirLight *dirlight = new DirLight({ 1.0f, -1.0f, 1.0f, 0.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, true);
 	PointLight *pointlight = new PointLight({ { 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f,{ 0.6f, 0.6f, 0.6f, 1.0f },{ 0.8f, 0.8f, 0.8f, 1.0f },{ 0.7f, 0.7f, 0.7f, 1.0f }, false });
 	PointLight *pointlight1 = new PointLight({ { 0.0f, 6.0f, 2.0f, 1.0f }, 1.0f, 0.09f, 0.032f, { 0.6f, 0.6f, 0.6f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.6f, 0.6f, 0.6f, 1.0f }, false });
 	PointLight *pointlight2 = new PointLight({{ 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f, { 0.6f, 0.6f, 0.6f, 1.0f }, { 0.8f, 0.8f, 0.8f, 1.0f }, { 0.3f, 0.3f, 0.3f, 1.0f }, false});
-	PointLight *pointlight3 = new PointLight({ { 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f,{ 0.6f, 0.6f, 0.6f, 1.0f },{ 0.8f, 0.8f, 0.8f, 1.0f },{ 0.3f, 0.3f, 0.3f, 1.0f }, false });
+	PointLight *pointlight3 = new PointLight({ { 0.0f, 6.0f, -1.0f, 1.0f }, 1.0f, 0.09f, 0.032f,{ 0.6f, 0.6f, 0.6f, 1.0f },{ 0.8f, 0.6f, 0.8f, 1.0f },{ 0.3f, 0.3f, 0.3f, 1.0f }, false });
 	
 	pipeline.dirLights.push_back(dirlight);
 	pipeline.pointLights.push_back(pointlight);
-	pipeline.pointLights.push_back(pointlight1);
-	pipeline.pointLights.push_back(pointlight2);
-	pipeline.pointLights.push_back(pointlight3);
+	//pipeline.pointLights.push_back(pointlight1);
+	//pipeline.pointLights.push_back(pointlight2);
+	//pipeline.pointLights.push_back(pointlight3);
 
 	/// check shadows 增加阴影摄像机
-	//pipeline.checkLights();
+	pipeline.checkLights();
 
 	// ===================== 加载主摄像机 ======================// 
 	Camera *mainCamera = new Camera(
@@ -229,12 +237,11 @@ int main() {
 	);
 
 	// 设置主摄像机
-	pipeline.mainCamera = mainCamera;
 	pipeline.cameras.push_back(mainCamera);
 
 	// ===================== 加载物体模型 ======================// 
 	/// 共享资源创建 纹理,材质
-	Texture *defaultTexure = new Texture();// 初始化纹理
+	//Texture *defaultTexure = new Texture();// 初始化纹理
 	Material *dimian = new Material(
 		"dimian", 
 		{ 0.2f, 0.2f, 0.2f }, 
@@ -254,7 +261,6 @@ int main() {
 		{ 0.5f, 0.5f, 0.5f },
 		32.0f, 1.0f, 1.0f, 1, 1, "mabu.png", -1, "", -1, "", -1, "", -1, "", -1, "", -1, "", -1
 	);
-
 
 	/// 加载人型模型和材质
 	Object *nanosuit = new Object();
@@ -287,7 +293,7 @@ int main() {
 	box->dirty = true;
 
 	Object *box1 = new Object(boxModel, mabu);
-	box1->pos = { 1.5, 2, -1, 1 };
+	box1->pos = { 0.5, 2, -1, 1 };
 	box1->scale = { 0.5, 0.5, 0.5, 0 };
 	box1->axis = { 1, 0, 1, 1 };
 	box1->theta = 0.0f;
@@ -419,9 +425,11 @@ int main() {
 			Camera* camera = pipeline.cameras[i];
 			if (camera->main == true) {
 				pipeline.cull = 1; // 背面剔除
-				//pipeline.setFrameBuffer(framebuffer);
+				//pipeline.setFrameBuffer((IUINT32*)screen_fb);
+				pipeline.setFrameBuffer(framebuffer);
 				pipeline.setZBuffer(zbuffer);
-				pipeline.setShadowBuffer(NULL);
+				pipeline.setShadowBuffer(NULL); // 用于更新shadowmap
+				pipeline.useShadowBuffer(shadowbuffer);
 			} else {
 				// 渲染阴影
 				pipeline.cull = 2; // 正面剔除 pite pinning
@@ -434,12 +442,20 @@ int main() {
 			pipeline.transform.reset();
 			// 设置摄像机
 			pipeline.setCurCamera(camera);
-			// 更新transform
-			//pipeline.transform.update_transform();
 			// 绘制物体
 			pipeline.Draw();
 		}
 
+		IUINT32* pFB = (IUINT32*)framebuffer;
+		for (int y = 0; y < SCREEN_HEIGHT; y++) {
+			for (int x = 0; x < SCREEN_WIDTH; x++) {
+				IUINT32 color = framebuffer[y * REAL_WIDTH + x];
+				screen_fb[y * REAL_WIDTH * 4 + x * 4 + 0] = 0xff & color;
+				screen_fb[y * REAL_WIDTH * 4 + x * 4 + 1] = (0xff << 8 & color) >> 8;
+				screen_fb[y * REAL_WIDTH * 4 + x * 4 + 2] = (0xff << 16 & color) >> 16;
+				screen_fb[y * REAL_WIDTH * 4 + x * 4 + 3] = (0xff << 24 & color) >> 24;
+			}
+		}
 		// 刷新
 		screen_update();
 		Sleep(1);

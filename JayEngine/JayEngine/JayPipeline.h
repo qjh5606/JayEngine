@@ -52,9 +52,17 @@ public:
 	void setCurCamera(Camera* camera);
 
 	// 设置帧缓冲指针
-	void setFrameBuffer(IUINT32* framebuffer) {
-		this->framebuffer = framebuffer;
+	void setFrameBuffer(IUINT32* renderbuffer) {
+		if (renderbuffer == NULL) {
+			this->useFrameBuffer = false;
+		}
+		else {
+			this->useFrameBuffer = true;
+			this->framebuffer = renderbuffer;
+		}
 	}
+
+	
 
 	// 设置Z缓冲指针
 	void setZBuffer(float* zbuffer) {
@@ -66,8 +74,13 @@ public:
 		this->shadowbuffer = shadowbuffer;
 	}
 
+	void useShadowBuffer(float* shadowbuffer) {
+		this->useshadowbuffer = shadowbuffer;
+	}
+
+
 	// 检查是否有光源需要产生阴影
-	//void checkLights();
+	void checkLights();
 
 	// 绘制图元
 	void device_draw_primitive(Vertex* t1, Vertex* t2, Vertex* t3);
@@ -154,6 +167,8 @@ public:
 	// ======================= 缓冲Buffer ======================= // 
 	float *zbuffer;					// 深度缓存
 	float *shadowbuffer;			// 阴影缓存 
+	float *useshadowbuffer;			// 阴影缓存 
+	bool useFrameBuffer;
 	IUINT32 *framebuffer;			// 帧缓冲
 	IUINT32 background;				// 背景颜色
 	IUINT32 foreground;				// 前景颜色

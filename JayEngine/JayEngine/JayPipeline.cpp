@@ -11,6 +11,36 @@ void Pipeline::setCurCamera(Camera* camera) {
 	transform.projection = curCamera->projection_matrix;
 }
 
+void Pipeline::checkLights() {
+
+	for (int i = 0; i < this->dirLights.size(); i++) {
+		auto dirLight = dirLights[i];
+		if (dirLight->shadow == true) {
+			Vector dir = dirLight->dir;
+			Camera *camera = new Camera(
+				orthographic,
+				false,
+				{ 0.0f, 3.0f, -3.0f, 1.0f },
+				dir,
+				{ 0.0f, 1.0f, 0.0f, 0.0f },
+				3.1415926 * 0.5f,
+				0.1f,
+				15.0f,
+				width,
+				height,
+				-3.0f,
+				3.0f,
+				-3.0f,
+				3.0f,
+				true
+			);
+			// 添加影子相机
+			this->cameras.push_back(camera);
+		}
+	}
+}
+
+
 // 绘制入口函数
 void Pipeline::Draw() {
 
@@ -37,6 +67,42 @@ void Pipeline::Draw() {
 	}
 }
 
+
+
+// 比较
+bool PointCmp(const Vertex &a, const Vertex &b, double &x, double &y) {
+	double det = (a.pos.x - x) * (b.pos.y - y) - (b.pos.x - x) * (a.pos.y - y);
+	if (det < 0)
+		return true;
+	if (det > 0)
+		return false;
+	double d1 = (a.pos.x - x) * (a.pos.x - x) + (a.pos.y - y) * (a.pos.y - y);
+	double d2 = (b.pos.x - x) * (b.pos.x - x) + (b.pos.y - y) * (b.pos.y - y);
+	return d1 > d2;
+}
+
+// 顶点逆时针排序
+void Pipeline::sortVertexs(std::vector<Vertex> &VertexSet, int size) {
+
+	// 1. 计算重心
+	double x = 0, y = 0;
+	for (int i = 0; i < size; i++) {
+		x += VertexSet[i].pos.x;
+		y += VertexSet[i].pos.y;
+	}
+	x /= size;
+	y /= size;
+	// 冒泡排序
+	for (int i = 0; i < size; i++) {
+		for (int j = 0; j < size - i - 1; j++) {
+			if (PointCmp(VertexSet[j], VertexSet[j + 1], x, y)) {
+				Vertex tmp = VertexSet[j];
+				VertexSet[j] = VertexSet[j + 1];
+				VertexSet[j + 1] = tmp;
+			}
+		}
+	}
+}
 
 // Cohen–Sutherland是一个线段裁剪算法
 typedef int OutCode;
@@ -65,40 +131,6 @@ OutCode ComputeOutCode(Vertex *v) {
 	else if (y > ymax)      // under the clip window
 		code |= BOTTOM;
 	return code;
-}
-
-// 
-bool PointCmp(const Vertex &a, const Vertex &b, double &x, double &y) {
-	double det = (a.pos.x - x) * (b.pos.y - y) - (b.pos.x - x) * (a.pos.y - y);
-	if (det < 0)
-		return true;
-	if (det > 0)
-		return false;
-	double d1 = (a.pos.x - x) * (a.pos.x - x) + (a.pos.y - y) * (a.pos.y - y);
-	double d2 = (b.pos.x - x) * (b.pos.x - x) + (b.pos.y - y) * (b.pos.y - y);
-	return d1 > d2;
-}
-
-void Pipeline::sortVertexs(std::vector<Vertex> &VertexSet, int size) {
-
-	// 1. 计算重心
-	double x = 0, y = 0;
-	for (int i = 0; i < size; i++) {
-		x += VertexSet[i].pos.x;
-		y += VertexSet[i].pos.y;
-	}
-	x /= size;
-	y /= size;
-	// 冒泡排序
-	for (int i = 0; i < size; i++) {
-		for (int j = 0; j < size - i - 1; j++) {
-			if (PointCmp(VertexSet[j], VertexSet[j + 1], x, y)) {
-				Vertex tmp = VertexSet[j];
-				VertexSet[j] = VertexSet[j + 1];
-				VertexSet[j + 1] = tmp;
-			}
-		}
-	}
 }
 
 void Pipeline::clip_lines(Vertex v1, Vertex v2, std::vector<Vertex> &VertexSet) {
@@ -170,145 +202,6 @@ void Pipeline::clip_lines(Vertex v1, Vertex v2, std::vector<Vertex> &VertexSet) 
 		if (it == VertexSet.end()) {
 			VertexSet.push_back(*t2);
 		}
-
-	}
-
-}
-
-
-void Pipeline::vert_shader(A2V *av, V2F *vf) {
-	vf->pos = av->pos;
-	vf->normal = av->normal;
-	vf->color = av->color;
-	vf->texcoord = av->texcoord;
-}
-
-void Pipeline::frag_shader(V2F *vf, Color *color){
-
-	// 当前物体的材质
-	Material *material = this->curObeject->Curmaterial;
-	std::vector<Texture*> texs = curObeject->textures;
-
-	Vector viewdir; // 相机的观察向量
-	Vector viewPos = this->curCamera->pos;// 当前相机
-	Vector_sub(&viewdir, &viewPos, &vf->pos);
-	Vector_normalize(&viewdir);
-	
-	// 当前纹理坐标
-	Texcoord *tex = &vf->texcoord;
-	// 当前法向量
-	Vector normal = vf->normal;
-
-	// 平行光的光源方向
-	if (this->dirLights.size()) {
-		DirLight *dirLight = this->dirLights[0];
-		Vector lightdir = dirLight->dir;
-		Vector_inverse(&lightdir);
-		Vector_normalize(&lightdir);
-
-		// 漫反射
-		float diff = fmax(0.0, Vector_dotproduct(&normal, &lightdir));
-
-		// 高光反射
-		Vector vec;
-		Vector_reflect(&vec, &lightdir, &normal);
-
-		// tmp += cur->bump_tex_id == -1 ? 0x0 : texs[cur->bump_tex_id]->readTexture(u, v);
-		float shininess = 1.0f;
-		if (material->specular_highlight_tex_id != -1) {
-			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
-		}
-		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
-
-		// 材质
-		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
-		Color temp2 = material->ambient;
-		if (material->ambient_tex_id != -1) {
-			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&temp, &dirLight->ambi, &temp2);
-		Color_add(color, color, &temp);
-
-		temp2 = material->diffuse;
-		if (material->diffuse_tex_id != -1) {
-			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&temp, &dirLight->diff, &temp2);
-		Color_scale(&temp, diff);
-		Color_add(color, color, &temp);
-
-		temp2 = material->specular;
-		if (material->specular_tex_id != -1) {
-			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&temp, &dirLight->spec, &temp2);
-		Color_scale(&temp, spec);
-		Color_add(color, color, &temp);
-
-
-		// 平行光的阴影生成
-		// TODO
-	}
-
-	for (int i = 0; i < this->pointLights.size(); i++) {
-
-		PointLight* pointlight = pointLights[i];
-
-		Vector lightDir = { 0.0f, 0.0f ,0.0f, 0.0f };
-
-		Vector_sub(&lightDir, &pointlight->pos, &vf->pos);
-		float distance = Vector_length(&lightDir);  // 距离
-		Vector_normalize(&lightDir); // 归一化
-		
-		// 漫反射
-		float diff = fmaxf(0.0, Vector_dotproduct(&lightDir, &vf->normal));
-		
-		// 高光反射
-		Vector vec;
-		Vector_inverse(&lightDir);
-		Vector_reflect(&vec, &lightDir, &normal);
-
-		float shininess = 1.0f;
-		if (material->specular_highlight_tex_id != -1) {
-			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
-		}
-		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
-		
-		// attenuation 衰减
-		float num = pointlight->constant + pointlight->linear * distance + pointlight->quadratic * (distance * distance);
-		float attenuation = 0;
-		if (num != 0)
-			attenuation = 1.0f / num;
-
-		// 材质
-		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
-		Color c ={ 0.0f, 0.0f, 0.0f, 1.0f };
-		Color temp2 = material->ambient;
-		if (material->ambient_tex_id != -1) {
-			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&c, &pointlight->ambi, &temp2);
-		Color_scale(&c, attenuation);
-		Color_add(&temp, &temp, &c);
-
-		temp2 = material->diffuse;
-		if (material->diffuse_tex_id != -1) {
-			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&c, &pointlight->diff, &temp2);
-		Color_scale(&c, attenuation*diff);
-		Color_add(&temp, &temp, &c);
-
-		temp2 = material->specular;
-		if (material->specular_tex_id != -1) {
-			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
-		}
-		Color_product(&c, &pointlight->spec, &temp2);
-		Color_scale(&c, attenuation*spec);
-		Color_add(&temp, &temp, &c);
-
-		// 最后累加到颜色
-		Color_add(color, color, &temp);
 	}
 }
 
@@ -663,6 +556,187 @@ void Pipeline::v2f_interpolating(V2F *dest, const V2F *src1, const V2F *src2, co
 	// ...
 }
 
+void Pipeline::vert_shader(A2V *av, V2F *vf) {
+	vf->pos = av->pos;
+	vf->normal = av->normal;
+	vf->color = av->color;
+	vf->texcoord = av->texcoord;
+}
+
+void Pipeline::frag_shader(V2F *vf, Color *color) {
+
+	// 当前物体的材质
+	Material *material = this->curObeject->Curmaterial;
+	std::vector<Texture*> texs = curObeject->textures;
+
+	Vector viewdir; // 相机的观察向量
+	Vector viewPos = this->curCamera->pos;// 当前相机
+	Vector_sub(&viewdir, &viewPos, &vf->pos);
+	Vector_normalize(&viewdir);
+
+	// 当前纹理坐标
+	Texcoord *tex = &vf->texcoord;
+	// 当前法向量
+	Vector normal = vf->normal;
+
+	// 平行光的光源方向
+	if (this->dirLights.size()) {
+		DirLight *dirLight = this->dirLights[0];
+		Vector lightdir = dirLight->dir;
+		Vector_inverse(&lightdir);
+		Vector_normalize(&lightdir);
+
+		// 漫反射
+		float diff = fmax(0.0, Vector_dotproduct(&normal, &lightdir));
+
+		// 高光反射
+		Vector vec;
+		Vector_reflect(&vec, &lightdir, &normal);
+
+		float shininess = 1.0f;
+		if (material->specular_highlight_tex_id != -1) {
+			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
+		}
+		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
+
+		// 材质
+		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
+		Color temp2 = material->ambient;
+		if (material->ambient_tex_id != -1) {
+			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->ambi, &temp2);
+		Color_add(color, color, &temp);
+
+		temp2 = material->diffuse;
+		if (material->diffuse_tex_id != -1) {
+			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->diff, &temp2);
+		Color_scale(&temp, diff);
+		Color_add(color, color, &temp);
+
+		temp2 = material->specular;
+		if (material->specular_tex_id != -1) {
+			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&temp, &dirLight->spec, &temp2);
+		Color_scale(&temp, spec);
+		Color_add(color, color, &temp);
+
+		// 平行光的阴影生成
+		// frag -> 灯坐标系 -> 灯的透视矩阵 -> 求z坐标比较
+#if 1
+		if (dirLight->shadow) {
+			Point tempPos = vf->pos;
+			tempPos.w = 1.0f;
+			Camera* camera = cameras[0];
+			Matrix_apply(&tempPos, &tempPos, &camera->view_matrix);
+			Matrix_apply(&tempPos, &tempPos, &camera->projection_matrix);
+			transform.transform_homogenize(&tempPos, &tempPos);
+			// 求出在该平行光下的屏幕坐标系
+			int y = (int)(tempPos.y + 0.5);
+			int x = (int)(tempPos.x + 0.5);
+
+			Vector tempNormal = vf->normal;
+
+
+			Matrix nm;
+			Matrix_clone(&nm, &camera->view_matrix);
+			Matrix_inverse(&nm);
+			Matrix_transpose(&nm);
+
+			Matrix_apply(&tempNormal, &tempNormal, &nm);
+			Vector_inverse(&tempNormal);
+			float dot = Vector_dotproduct(&tempNormal, &camera->front);
+			// 点积大于0,说明可见,会产生阴影
+			if (dot > 0) {
+				float bias = 0.015 * (1.0 - dot);
+				if (bias < 0.002f) bias = 0.001;
+				if (y >= 0 && y < camera->height&&x >= 0 && x < camera->width) {
+
+					float shadow = 0.0;
+					for (int i = -1; i <= 1; ++i) {
+						for (int j = -1; j <= 1; ++j) {
+							if (y + j >= 0 && y + j < camera->height&&x + i >= 0 && x + i < camera->width) {
+								float pcfDepth = useshadowbuffer[(y + j)*camera->width + (x + i)];
+								shadow += tempPos.z - bias > pcfDepth ? 1.0f : 0.0f;
+							}
+						}
+					}
+					shadow /= 9.0;
+
+					Color temp = { 0.3f,0.3f,0.3f,0.3f };
+					Color_scale(&temp, shadow);
+					Color_sub(color, color, &temp);
+				}
+			}
+		}
+#endif
+	}
+
+	for (int i = 0; i < this->pointLights.size(); i++) {
+
+		PointLight* pointlight = pointLights[i];
+
+		Vector lightDir = { 0.0f, 0.0f ,0.0f, 0.0f };
+
+		Vector_sub(&lightDir, &pointlight->pos, &vf->pos);
+		float distance = Vector_length(&lightDir);  // 距离
+		Vector_normalize(&lightDir); // 归一化
+
+		// 漫反射
+		float diff = fmaxf(0.0, Vector_dotproduct(&lightDir, &vf->normal));
+
+		// 高光反射
+		Vector vec;
+		Vector_inverse(&lightDir);
+		Vector_reflect(&vec, &lightDir, &normal);
+
+		float shininess = 1.0f;
+		if (material->specular_highlight_tex_id != -1) {
+			shininess = texs[material->specular_highlight_tex_id]->readTexture(tex->u, tex->v);
+		}
+		float spec = powf(fmaxf(Vector_dotproduct(&viewdir, &vec), 0.0f), shininess);
+
+		// attenuation 衰减
+		float num = pointlight->constant + pointlight->linear * distance + pointlight->quadratic * (distance * distance);
+		float attenuation = 0;
+		if (num != 0)
+			attenuation = 1.0f / num;
+
+		// 材质
+		Color temp = { 0.0f, 0.0f ,0.0f, 1.0f };
+		Color c = { 0.0f, 0.0f, 0.0f, 1.0f };
+		Color temp2 = material->ambient;
+		if (material->ambient_tex_id != -1) {
+			temp2 = texs[material->ambient_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->ambi, &temp2);
+		Color_scale(&c, attenuation);
+		Color_add(&temp, &temp, &c);
+
+		temp2 = material->diffuse;
+		if (material->diffuse_tex_id != -1) {
+			temp2 = texs[material->diffuse_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->diff, &temp2);
+		Color_scale(&c, attenuation*diff);
+		Color_add(&temp, &temp, &c);
+
+		temp2 = material->specular;
+		if (material->specular_tex_id != -1) {
+			temp2 = texs[material->specular_tex_id]->readTextureCorlor(tex->u, tex->v);
+		}
+		Color_product(&c, &pointlight->spec, &temp2);
+		Color_scale(&c, attenuation*spec);
+		Color_add(&temp, &temp, &c);
+
+		// 最后累加到颜色
+		Color_add(color, color, &temp);
+	}
+}
+
 
 
 // 绘制扫描线2
@@ -676,11 +750,20 @@ void Pipeline::device_draw_scanline(Scanline* scanline, Point* points, V2F* vfs)
 
 			float rhw = scanline->v.pos.w; //1/w
 			
+			// 阴影图
+			if (this->shadowbuffer != NULL) {
+				float z = scanline->v.pos.z;
+				if (z <= shadowbuffer[y*width + x]) {
+					shadowbuffer[y*width + x] = z;
+				}
+			}
+
 			// 更新z缓存以及帧缓冲
 			if (this->zbuffer != NULL&&this->zbuffer[y*width + x] <= rhw) {
 				this->zbuffer[y*width + x] = rhw;
-
+				
 				// 帧缓冲
+				if (this->useFrameBuffer == false) break;
 				if (this->framebuffer != NULL) {
 
 					Color color = { 0.0f, 0.0f, 0.0f, 1.0f };
@@ -737,7 +820,6 @@ void Pipeline::device_draw_scanline(Scanline* scanline, Point* points, V2F* vfs)
 		if (x >= width) break;
 	}
 }
-
 
 // 绘制扫描线1
 void Pipeline::device_draw_scanline(Scanline* scanline) {
@@ -809,8 +891,7 @@ void Pipeline::device_draw_scanline(Scanline* scanline) {
 }
 
 
-
-// 输入三角形
+// 绘制三角形2
 void Pipeline::device_render_trap(Trapezoid *trap, Point *points, V2F* v2f) {
 	// 扫描线插值
 	Scanline scanline;
@@ -938,8 +1019,7 @@ void Pipeline::device_pixel(int x, int y, IUINT32 color) {
 	}
 }
 
-// 在 3D近裁剪面裁剪. 在相机空间完成
-// v1 v2 v3 是模型坐标
+// 在 3D近裁剪面裁剪. 在相机空间完成 v1 v2 v3 是模型坐标
 void Pipeline::clip_polys(Vertex* v1, Vertex* v2, Vertex* v3, bool world) {
 
 	Vertex p1 = *v1, p2 = *v2, p3 = *v3;
