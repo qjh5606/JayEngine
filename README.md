@@ -36,8 +36,8 @@ a soft render based on mini3d and tinyEngine
 - [x] 支持纹理输入 [借助stb实现] 
 - [x] 背面剔除 
 - [x] 裁剪 [2D裁剪][3D视椎体裁剪]
-- Phong光照模型
-- 阴影
+- [x] Phong光照模型
+- [x] 阴影
 
 ## 2019年4月5日
 - 裁剪算法基本实现
@@ -53,3 +53,8 @@ a soft render based on mini3d and tinyEngine
 
 ![在这里插入图片描述](https://img-blog.csdnimg.cn/20190409150945239.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FqaDU2MDY=,size_16,color_FFFFFF,t_70)
 
+
+## 2019年4月10日
+- ShadowMap 实现阴影
+
+![在这里插入图片描述](https://img-blog.csdnimg.cn/20190410082242930.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3FqaDU2MDY=,size_16,color_FFFFFF,t_70)
